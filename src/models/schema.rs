@@ -18,8 +18,7 @@ table! {
 }
 
 table! {
-    chats (id) {
-        id -> Text,
+    chats (telegram_id) {
         telegram_id -> Text,
         default_game -> Text,
     }

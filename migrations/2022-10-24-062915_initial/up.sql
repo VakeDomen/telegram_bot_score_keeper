@@ -2,13 +2,12 @@
 create table users
 (
     id              varchar not null primary key,
-    name            varchar not null,
+    name            varchar not null unique,
     chat_id         varchar not null
 );
 
 create table chats 
 (
-    id              varchar not null primary key,
     telegram_id     varchar not null,
     default_game    varchar not null
 );

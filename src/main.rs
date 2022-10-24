@@ -1,4 +1,5 @@
 
+use controllers::register::register;
 use teloxide::Bot;
 use teloxide::types::Message;
 use teloxide::utils::command::BotCommands;
@@ -11,6 +12,8 @@ use dotenv::dotenv;
 mod core;
 mod models;
 mod controllers;
+mod games;
+
 
 #[macro_use] extern crate diesel;
 extern crate serde_json;
@@ -34,7 +37,9 @@ enum Command {
     #[command(description = "Start new game")]
     NewGame,
     #[command(description = "Unsubscribe from jobs")]
-    EndGame
+    EndGame,
+    #[command(description = "Register new players")]
+    Register,
 }
 
 
@@ -48,6 +53,7 @@ async fn answer(
         Command::Help => { bot.send_message(message.chat.id, Command::descriptions().to_string()).await? },
         Command::NewGame => { bot.send_message(message.chat.id, Command::descriptions().to_string()).await? },
         Command::EndGame => { bot.send_message(message.chat.id, Command::descriptions().to_string()).await? },
+        Command::Register => { bot.send_message(message.chat.id, register(&bot, message)).await? },
     };
     Ok(())
 }
