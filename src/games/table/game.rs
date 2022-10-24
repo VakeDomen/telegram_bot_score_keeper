@@ -49,9 +49,11 @@ impl Game for Table {
         for index in 0..users.len() {
             let uid = users[index].id.clone();
             
-            // if user seen for the first time fill the score with null until this round
+            // if user seen for the first time fill the score with None until this round
             if !self.players.contains(&users[index]) {
+                // save player
                 self.players.push(users[index].clone());
+                // generate empty score
                 let mut score: Vec<Option<i32>> = vec![];
                 if self.round > 0 {
                     for _ in 0..self.round { score.push(None); }
@@ -62,11 +64,7 @@ impl Game for Table {
             //insert score for this round
             if let Some(score) = self.score.get_mut(&uid) {
                 // check for gaps in score (fill gaps with None)
-                if score.len() < (self.round) as usize {
-                    for _ in score.len()..(self.round) as usize {
-                        score.push(None);
-                    }
-                }
+                fill_gaps_until_round(score, self.round);
                 // push latest
                 score.push(Some(scores[index]))
             } else {
@@ -75,22 +73,19 @@ impl Game for Table {
 
         }
         self.round += 1;
-        Ok(format!("{:#?}", self.score))
+        Ok(format!("Round {} submitted!", self.round))
     }
 
     fn end_game(mut self: Box<Self>) -> Result<String, std::io::Error> {
         for player in self.players.iter() {
             if let Some(score) = self.score.get_mut(&player.id.to_string()) {
-                if score.len() < (self.round) as usize {
-                    for _ in score.len()..(self.round) as usize {
-                        score.push(None);
-                    }
-                }
+                fill_gaps_until_round(score, self.round);
             } else {
                 return Err(Error::new(ErrorKind::Other, format!("Something went wrong on entering user {} score for the missing rounds", player.name)))
             };
         }
-        Ok(build_score_table_html(self.players, self.score, self.round))
+        let sum_by_player: HashMap<String, i32> = sum_score_by_players(&self.score, &self.players);
+        Ok(build_score_table_html(self.players, self.score, self.round, sum_by_player))
     }
 
     fn get_state(&mut self) -> Result<String, std::io::Error> {
@@ -99,6 +94,30 @@ impl Game for Table {
 
     fn generate_file_name(&self) -> String {
         format!("{}_table.html", Utc::now())
+    }
+}
+
+fn sum_score_by_players(score: &HashMap<String, Vec<Option<i32>>>, players: &[User]) -> HashMap<String, i32> {
+    let mut totals = HashMap::new();
+    for player in players.iter() {
+        if let Some(scores) = score.get(&player.id) {
+            let sum: i32 = scores
+                .iter()
+                .filter_map(|x| x.as_ref() )
+                .sum();
+            totals.insert(player.id.clone(), sum);
+        } else {
+            totals.insert(player.id.clone(), 0);
+        }
+    }
+    totals
+}
+
+fn fill_gaps_until_round(score: &mut Vec<Option<i32>>, round: i32) {
+    if score.len() < (round) as usize {
+        for _ in score.len()..(round) as usize {
+            score.push(None);
+        }
     }
 }
 

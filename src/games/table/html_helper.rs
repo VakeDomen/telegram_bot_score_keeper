@@ -2,16 +2,26 @@ use std::collections::HashMap;
 
 use crate::models::user::User;
 
-pub fn build_score_table_html(players: Vec<User>, score_table: HashMap<String, Vec<Option<i32>>>, rounds: i32) -> String {
+pub fn build_score_table_html(
+    players: Vec<User>, 
+    score_table: HashMap<String, Vec<Option<i32>>>, 
+    rounds: i32,
+    final_scores: HashMap<String, i32>,
+) -> String {
     format!(
         "{}{}{}", 
         get_html_head(), 
-        generate_table(&score_table, &players, rounds), 
+        generate_table(&players, &score_table, rounds, final_scores), 
         get_html_tail()
     )
 }
 
-fn generate_table(score_table: &HashMap<String, Vec<Option<i32>>>, players: &[User], rounds: i32) -> String {
+fn generate_table(
+    players: &[User], 
+    score_table: &HashMap<String, Vec<Option<i32>>>, 
+    rounds: i32,
+    final_scores: HashMap<String, i32>,
+) -> String {
     let mut table = String::from("");
     // generate table header
     for player in players.iter() {
@@ -23,10 +33,30 @@ fn generate_table(score_table: &HashMap<String, Vec<Option<i32>>>, players: &[Us
     for index in 0..rounds {
         table = format!("{}<tr>{}</tr>", table, generate_line(score_table, players, index));
     }
-    table
+    format!("{}<tr>{}</tr>", table, generate_total_score_row(players, final_scores))
 }
 
-fn generate_line(score_table: &HashMap<String, Vec<Option<i32>>>, players: &[User], index: i32) -> String {
+fn generate_total_score_row(
+    players: &[User], 
+    final_scores: HashMap<String, i32>,
+) -> String {
+    let mut line = String::from("");
+    for player in players.iter() {
+        let final_score: &i32 = match final_scores.get(&player.id){ 
+            Some(val) => val,
+            None => &0,
+        };
+        let append = format!("<th>{}</th>", final_score);
+        line = format!("{}{}", line, append);
+    }
+    line
+}
+
+fn generate_line(
+    score_table: &HashMap<String, Vec<Option<i32>>>, 
+    players: &[User], 
+    index: i32,
+) -> String {
     let mut line = String::from("");
     for player in players.iter() {
         let append = format!("<td>{}</td>", extract_field_value(score_table, player, index));
