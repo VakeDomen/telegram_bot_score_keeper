@@ -10,6 +10,6 @@ pub trait CheckName {
 pub trait Game {
     fn start_game(&mut self) -> Result<String, Error>;
     fn handle_round(&mut self, message: Message) -> Result<String, Error>;
-    fn end_game(&mut self) -> Result<String, Error>;
+    fn end_game(self: Box<Self>) -> Result<String, Error>; // https://stackoverflow.com/questions/63766721/size-of-dyn-mytrait-cannot-be-statically-determined-in-method-which-takes-self
     fn get_state(&mut self) -> Result<String, Error>;
 }

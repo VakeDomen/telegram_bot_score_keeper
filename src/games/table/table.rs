@@ -2,6 +2,8 @@ use std::{collections::HashMap, io::{ErrorKind, Error}};
 
 use crate::{core::{traits::{CheckName, Game}, message_helper::extract_message_text, database::user_operations::get_user_by_name}, models::user::User};
 
+use super::html_helper::build_score_table_html;
+
 pub struct Table {
     players: Vec<User>,
     score: HashMap<String, Vec<Option<i32>>>,
@@ -74,8 +76,19 @@ impl Game for Table {
         Ok(format!("{:#?}", self.score))
     }
 
-    fn end_game(&mut self) -> Result<String, std::io::Error> {
-        todo!()
+    fn end_game(mut self: Box<Self>) -> Result<String, std::io::Error> {
+        for player in self.players.iter() {
+            if let Some(score) = self.score.get_mut(&player.id.to_string()) {
+                if score.len() < (self.round) as usize {
+                    for _ in score.len()..(self.round) as usize {
+                        score.push(None);
+                    }
+                }
+            } else {
+                return Err(Error::new(ErrorKind::Other, format!("Something went wrong on entering user {} score for the missing rounds", player.name)))
+            };
+        }
+        Ok(build_score_table_html(self.players.into(), self.score, self.round))
     }
 
     fn get_state(&mut self) -> Result<String, std::io::Error> {
@@ -108,7 +121,7 @@ fn extract_round_scores(message_text: String) -> Result<Vec<i32>, Error> {
     for fragment in fragments_of_interest.into_iter() {
         let score = match fragment.parse() {
             Ok(num) => num,
-            Err(e) => return Err(Error::new(ErrorKind::Other, format!("Error parsing score: {}", fragment))),
+            Err(e) => return Err(Error::new(ErrorKind::Other, format!("Error parsing score {}", fragment))),
         };
         scores.push(score);
     }

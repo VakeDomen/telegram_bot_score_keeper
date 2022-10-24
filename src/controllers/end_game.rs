@@ -15,7 +15,7 @@ pub async fn end_game(
     }
 
     // find game struct of the chat (should always be found due to previous step)
-    let game_to_play = match games.get_mut(&chat_id) {
+    let game_to_play = match games.remove(&chat_id) {
         Some(game) => game,
         None => return "Error finding a running game! Invalid state on game fetch".to_string()
     };

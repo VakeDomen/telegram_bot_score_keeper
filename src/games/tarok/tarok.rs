@@ -34,7 +34,7 @@ impl Game for Tarok {
         todo!()
     }
 
-    fn end_game(&mut self) -> Result<String, std::io::Error> {
+    fn end_game(self: Box<Self>) -> Result<String, std::io::Error> {
         todo!()
     }
 
