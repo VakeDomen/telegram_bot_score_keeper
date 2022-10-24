@@ -1,5 +1,6 @@
 
 use controllers::end_game::end_game;
+use controllers::game_state::game_state;
 use controllers::new_game::new_game;
 use controllers::register::register;
 use controllers::score_round::score_round;
@@ -43,7 +44,9 @@ enum Command {
     EndGame,
     #[command(description = "Register new players")]
     Register,
-    #[command(description = "Round of game")]
+    #[command(description = "Submit a round of a game")]
+    Round,
+    #[command(description = "Current score of game")]
     Score,
 }
 
@@ -59,7 +62,8 @@ async fn answer(
         Command::Register => { bot.send_message(message.chat.id, register(&bot, message)).await?; },
         Command::NewGame => { bot.send_message(message.chat.id, new_game(&bot, message).await).await?; },
         Command::EndGame => end_game_handler(bot, message).await,
-        Command::Score => { bot.send_message(message.chat.id, score_round(&bot, message).await).await?; },
+        Command::Score => game_state_handler(bot, message).await,
+        Command::Round => { bot.send_message(message.chat.id, score_round(&bot, message).await).await?; },
     };
     Ok(())
 }
@@ -72,3 +76,11 @@ async fn end_game_handler(bot: Bot, message: Message) {
     };
 }
 
+
+async fn game_state_handler(bot: Bot, message: Message) {
+    let id = message.chat.id;
+    match game_state(&bot, message).await {
+        Ok(file) => { let _ = bot.send_document(id, file).await; },
+        Err(e) => {let _ = bot.send_message(id, e.to_string()).await;},
+    };
+}

@@ -85,15 +85,19 @@ impl Game for Table {
             };
         }
         let sum_by_player: HashMap<String, i32> = sum_score_by_players(&self.score, &self.players);
-        Ok(build_score_table_html(self.players, self.score, self.round, sum_by_player))
+        Ok(build_score_table_html(&self.players, &self.score, self.round, sum_by_player))
     }
 
     fn get_state(&mut self) -> Result<String, std::io::Error> {
-        todo!()
-    }
-
-    fn generate_file_name(&self) -> String {
-        format!("{}_table.html", Utc::now())
+        for player in self.players.iter() {
+            if let Some(score) = self.score.get_mut(&player.id.to_string()) {
+                fill_gaps_until_round(score, self.round);
+            } else {
+                return Err(Error::new(ErrorKind::Other, format!("Something went wrong on entering user {} score for the missing rounds", player.name)))
+            };
+        }
+        let sum_by_player: HashMap<String, i32> = sum_score_by_players(&self.score, &self.players);
+        Ok(build_score_table_html(&self.players, &self.score, self.round, sum_by_player))
     }
 }
 

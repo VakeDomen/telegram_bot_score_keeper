@@ -1,3 +1,11 @@
+#[derive(Debug)]
+pub enum TarokGameInput {
+    TarokGame(TarokGame),
+    TarokGameAttribute(TarokGameAttribute),
+    TarokGameDiff(i32),
+}
+
+#[derive(Debug)]
 pub enum TarokGame {
     I3,
     I2,
@@ -18,7 +26,8 @@ pub enum TarokGame {
     BVSB,
 }
 
-pub enum TarokGameAttibute {
+#[derive(Debug)]
+pub enum TarokGameAttribute {
     P,
     K,
     V,
@@ -29,6 +38,7 @@ pub enum TarokGameAttibute {
     NT,
 }
 
+#[derive(Debug)]
 pub enum TarokPlayerAttibute {
     M,
 }

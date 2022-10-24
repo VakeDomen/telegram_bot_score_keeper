@@ -3,15 +3,15 @@ use std::collections::HashMap;
 use crate::models::user::User;
 
 pub fn build_score_table_html(
-    players: Vec<User>, 
-    score_table: HashMap<String, Vec<Option<i32>>>, 
+    players: &Vec<User>, 
+    score_table: &HashMap<String, Vec<Option<i32>>>, 
     rounds: i32,
     final_scores: HashMap<String, i32>,
 ) -> String {
     format!(
         "{}{}{}", 
         get_html_head(), 
-        generate_table(&players, &score_table, rounds, final_scores), 
+        generate_table(players, score_table, rounds, final_scores), 
         get_html_tail()
     )
 }
