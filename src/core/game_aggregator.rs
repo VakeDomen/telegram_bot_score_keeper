@@ -11,8 +11,8 @@ pub struct GameAggregator {
 impl GameAggregator {
     pub fn new() -> Self {
         Self {
-            tarok: Tarok{},
-            table: Table{},
+            tarok: Tarok::new(),
+            table: Table::new(),
         }
     }
  

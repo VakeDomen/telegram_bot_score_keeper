@@ -1,6 +1,6 @@
 use teloxide::{Bot, types::{Message, MediaKind, MessageKind}};
 
-use crate::{models::user::{NewUser, User}, core::game_aggregator::GameAggregator};
+use crate::{models::user::{NewUser, User}, core::{game_aggregator::GameAggregator, message_helper::extract_message_text}};
 use crate::core::database::user_operations::insert_user;
 
 pub fn register(
@@ -8,18 +8,13 @@ pub fn register(
     message: Message,
 ) -> String {
     let chat_id = message.chat.id;
-    // check message type
-    let mes = match &message.kind {
-        MessageKind::Common(mes) => mes,
-        _ => return "Not common message".into(),
-    };
-    // extract media (text)
-    let media = match &mes.media_kind {
-        MediaKind::Text(media) => media,
-        _ => return "Not text media".into(),
+    
+    let text = match extract_message_text(&message) {
+        Some(text) => text,
+        None => return "Enter names of users".to_string()
     };
     // extract amount to be loaned to recievers
-    let names = extract_names(&media.text);
+    let names = extract_names(text.as_str());
     let new_users: Vec<NewUser> = names.iter().map(|n| NewUser::from(
         n.to_uppercase().to_string(), 
         chat_id.to_string())

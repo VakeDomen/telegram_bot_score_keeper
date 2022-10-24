@@ -1,6 +1,22 @@
-use crate::core::traits::{CheckName, Game};
+use std::collections::HashMap;
 
-pub struct Tarok;
+use crate::{core::traits::{CheckName, Game}, models::user::User};
+
+pub struct Tarok {
+    players: Vec<User>,
+    radlci: HashMap<String, i32>,
+    score: HashMap<String, i32>,
+}
+
+impl Tarok {
+    pub fn new() -> Self {
+        Self {
+            players: vec![],
+            radlci: HashMap::new(),
+            score: HashMap::new(),
+        }
+    }
+}
 
 impl CheckName for Tarok {
     fn get_reserved_terms(&self) -> &'static [&'static str] {
@@ -11,7 +27,7 @@ impl CheckName for Tarok {
 
 impl Game for Tarok {
     fn start_game(&mut self) -> Result<String, std::io::Error> {
-        todo!()
+        Ok("Started game of Tarok!".to_string())
     }
 
     fn handle_round(&mut self, message: teloxide::types::Message) -> Result<String, std::io::Error> {

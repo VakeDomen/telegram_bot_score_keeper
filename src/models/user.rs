@@ -2,10 +2,10 @@ use std::io::{Error, ErrorKind};
 use uuid::Uuid;
 use super::schema::users;
 
-#[derive(Debug, Queryable, Insertable)]
+#[derive(Debug, Queryable, Insertable, PartialEq, Clone)]
 #[table_name = "users"]
 pub struct User {
-    id: String,
+    pub id: String,
     pub name: String,
     chat_id: String
 }

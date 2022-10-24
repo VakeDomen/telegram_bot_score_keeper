@@ -1,6 +1,6 @@
 use teloxide::{Bot, types::Message};
 
-use crate::{core::{game_handler::RUNNING_GAMES, traits::Game}, games::tarok::tarok::Tarok};
+use crate::{core::{game_handler::RUNNING_GAMES, traits::Game}, games::{tarok::tarok::Tarok, table::table::Table}};
 
 pub async fn new_game(
     _: &Bot,
@@ -29,5 +29,5 @@ pub async fn new_game(
 }
 
 fn get_chat_default_game() -> Box<dyn Game + Send> {
-    Box::new(Tarok {})
+    Box::new(Table::new())
 }
