@@ -1,11 +1,7 @@
-use std::error::Error;
-
 use teloxide::{Bot, types::{Message, MediaKind, MessageKind}};
 
 use crate::{models::user::{NewUser, User}, core::game_aggregator::GameAggregator};
-
-use super::database::user_operations::insert_user;
-
+use crate::core::database::user_operations::insert_user;
 
 pub fn register(
     _: &Bot,

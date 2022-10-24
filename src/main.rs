@@ -1,5 +1,8 @@
 
+use controllers::end_game::end_game;
+use controllers::new_game::new_game;
 use controllers::register::register;
+use controllers::score_round::score_round;
 use teloxide::Bot;
 use teloxide::types::Message;
 use teloxide::utils::command::BotCommands;
@@ -40,6 +43,8 @@ enum Command {
     EndGame,
     #[command(description = "Register new players")]
     Register,
+    #[command(description = "Round of game")]
+    Score,
 }
 
 
@@ -51,9 +56,10 @@ async fn answer(
 ) -> ResponseResult<()> {
     match command {
         Command::Help => { bot.send_message(message.chat.id, Command::descriptions().to_string()).await? },
-        Command::NewGame => { bot.send_message(message.chat.id, Command::descriptions().to_string()).await? },
-        Command::EndGame => { bot.send_message(message.chat.id, Command::descriptions().to_string()).await? },
         Command::Register => { bot.send_message(message.chat.id, register(&bot, message)).await? },
+        Command::NewGame => { bot.send_message(message.chat.id, new_game(&bot, message).await).await? },
+        Command::EndGame => { bot.send_message(message.chat.id, end_game(&bot, message).await).await? },
+        Command::Score => { bot.send_message(message.chat.id, score_round(&bot, message).await).await? },
     };
     Ok(())
 }
