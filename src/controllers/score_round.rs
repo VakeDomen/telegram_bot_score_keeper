@@ -24,6 +24,6 @@ pub async fn score_round(
     let game_result = game_to_play.handle_round(message);
     match game_result {
         Ok(message) => message,
-        Err(e) => format!("Error handling round: {}", e.to_string()) 
+        Err(e) => format!("Error handling round: {}", e) 
     }
 }

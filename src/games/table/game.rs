@@ -39,7 +39,7 @@ impl Game for Table {
             Err(e) => return Err(e),
         };
 
-        let scores = match extract_round_scores(text.clone()) {
+        let scores = match extract_round_scores(text) {
             Ok(score) => score,
             Err(e) => return Err(e),
         };
@@ -90,7 +90,7 @@ impl Game for Table {
                 return Err(Error::new(ErrorKind::Other, format!("Something went wrong on entering user {} score for the missing rounds", player.name)))
             };
         }
-        Ok(build_score_table_html(self.players.into(), self.score, self.round))
+        Ok(build_score_table_html(self.players, self.score, self.round))
     }
 
     fn get_state(&mut self) -> Result<String, std::io::Error> {
@@ -103,13 +103,15 @@ impl Game for Table {
 }
 
 fn extract_round_users(message_text: String) -> Result<Vec<User>, Error> {
-    let fragments: Vec<&str> = message_text.split(' ').collect();
-    let fragments_of_interest: Vec<&str> = fragments.into_iter().skip(1).step_by(2).collect(); // remove command text
     let mut users = vec![];
-    for fragment in fragments_of_interest.into_iter() {
-        let user_option = match get_user_by_name(fragment.to_uppercase().to_string()) {
+    for fragment in message_text
+        .split(' ')
+        .skip(1)
+        .step_by(2) 
+    {
+        let user_option = match get_user_by_name(fragment.to_uppercase()) {
             Ok(data) => data,
-            Err(e) => return Err(Error::new(ErrorKind::Other, format!("Error fetching user from DB: {}", e.to_string()))),
+            Err(e) => return Err(Error::new(ErrorKind::Other, format!("Error fetching user from DB: {}", e))),
         };
         let user = match user_option {
             Some(user) => user,
@@ -121,10 +123,12 @@ fn extract_round_users(message_text: String) -> Result<Vec<User>, Error> {
 }
 
 fn extract_round_scores(message_text: String) -> Result<Vec<i32>, Error> {
-    let fragments: Vec<&str> = message_text.split(' ').collect();
-    let fragments_of_interest: Vec<&str> = fragments.into_iter().skip(2).step_by(2).collect(); // remove command text
     let mut scores: Vec<i32> = vec![];
-    for fragment in fragments_of_interest.into_iter() {
+    for fragment in message_text
+        .split(' ')
+        .skip(2)
+        .step_by(2)
+    {
         let score = match fragment.parse() {
             Ok(num) => num,
             Err(_e) => return Err(Error::new(ErrorKind::Other, format!("Error parsing score {}", fragment))),

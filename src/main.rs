@@ -64,8 +64,8 @@ async fn answer(
     Ok(())
 }
 
-async fn end_game_handler(bot: Bot, message: Message) -> () {
-    let id = message.chat.id.clone();
+async fn end_game_handler(bot: Bot, message: Message) {
+    let id = message.chat.id;
     match end_game(&bot, message).await {
         Ok(file) => { let _ = bot.send_document(id, file).await; },
         Err(e) => {let _ = bot.send_message(id, e.to_string()).await;},

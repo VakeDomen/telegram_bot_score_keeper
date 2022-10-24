@@ -1,3 +1,3 @@
 mod enums;
-pub mod tarok;
+pub mod game;
 mod html_helper;

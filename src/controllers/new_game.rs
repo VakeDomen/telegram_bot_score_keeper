@@ -1,6 +1,6 @@
 use teloxide::{Bot, types::Message};
 
-use crate::{core::{game_handler::RUNNING_GAMES, traits::Game}, games::table::table::Table};
+use crate::{core::{game_handler::RUNNING_GAMES, traits::Game}, games::table::game::Table};
 
 pub async fn new_game(
     _: &Bot,
@@ -24,7 +24,7 @@ pub async fn new_game(
     let game_result = game_to_play.start_game();
     match game_result {
         Ok(message) => message,
-        Err(e) => format!("Error starting game: {}", e.to_string()) 
+        Err(e) => format!("Error starting game: {}", e) 
     }
 }
 

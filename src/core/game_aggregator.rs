@@ -1,4 +1,4 @@
-use crate::{games::{tarok::tarok::Tarok, table::table::Table}, models::user::NewUser};
+use crate::{games::{tarok::game::Tarok, table::game::Table}, models::user::NewUser};
 
 use super::traits::CheckName;
 

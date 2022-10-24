@@ -36,20 +36,20 @@ pub async fn end_game(
         Ok(message) => message,
         Err(e) => return Err(Error::new(
             ErrorKind::Other, 
-            format!("Error ending game: {}", e.to_string()))
+            format!("Error ending game: {}", e))
         )
     };
     match save_file(html, file_name.clone()) {
         Ok(_) => Ok(send_file(file_name)),
         Err(e) => Err(Error::new(
             ErrorKind::Other, 
-            format!("Error saving game fle: {}", e.to_string()))
+            format!("Error saving game fle: {}", e))
         )
     }
 }
 
 fn append_file_to_path(generated_file_name: String) -> String {
-    format!("/home/vake/Projects/TelegramBotScoreKeeper/res/games/{}", generated_file_name)
+    format!("./res/games/{}", generated_file_name)
         .replace(' ', "_")
         .replace('-', "_")
         .replace(':', "_")

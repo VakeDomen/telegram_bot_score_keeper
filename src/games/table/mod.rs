@@ -1,2 +1,2 @@
-pub mod table;
+pub mod game;
 mod html_helper;

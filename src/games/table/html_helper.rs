@@ -11,7 +11,7 @@ pub fn build_score_table_html(players: Vec<User>, score_table: HashMap<String, V
     )
 }
 
-fn generate_table(score_table: &HashMap<String, Vec<Option<i32>>>, players: &Vec<User>, rounds: i32) -> String {
+fn generate_table(score_table: &HashMap<String, Vec<Option<i32>>>, players: &[User], rounds: i32) -> String {
     let mut table = String::from("");
     // generate table header
     for player in players.iter() {
@@ -26,10 +26,11 @@ fn generate_table(score_table: &HashMap<String, Vec<Option<i32>>>, players: &Vec
     table
 }
 
-fn generate_line(score_table: &HashMap<String, Vec<Option<i32>>>, players: &Vec<User>, index: i32) -> String {
+fn generate_line(score_table: &HashMap<String, Vec<Option<i32>>>, players: &[User], index: i32) -> String {
     let mut line = String::from("");
     for player in players.iter() {
-        line = format!("{}{}", line,format!("<td>{}</td>", extract_field_value(score_table, player, index)));
+        let append = format!("<td>{}</td>", extract_field_value(score_table, player, index));
+        line = format!("{}{}", line, append);
     }
     line
 }
