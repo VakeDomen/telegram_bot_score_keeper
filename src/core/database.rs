@@ -1,7 +1,7 @@
 pub mod user_operations {
     use diesel::{prelude::*, insert_into};
     use diesel::result::Error;
-    use crate::models::user::{User, NewUser};
+    use crate::models::user::User;
     use crate::models::schema::users::dsl::*;
 
     use super::sqlite_operations::establish_connection;

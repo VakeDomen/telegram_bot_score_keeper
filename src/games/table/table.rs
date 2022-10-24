@@ -1,5 +1,7 @@
 use std::{collections::HashMap, io::{ErrorKind, Error}};
 
+use chrono::Utc;
+
 use crate::{core::{traits::{CheckName, Game}, message_helper::extract_message_text, database::user_operations::get_user_by_name}, models::user::User};
 
 use super::html_helper::build_score_table_html;
@@ -94,6 +96,10 @@ impl Game for Table {
     fn get_state(&mut self) -> Result<String, std::io::Error> {
         todo!()
     }
+
+    fn generate_file_name(&self) -> String {
+        format!("{}_table.html", Utc::now())
+    }
 }
 
 fn extract_round_users(message_text: String) -> Result<Vec<User>, Error> {
@@ -121,7 +127,7 @@ fn extract_round_scores(message_text: String) -> Result<Vec<i32>, Error> {
     for fragment in fragments_of_interest.into_iter() {
         let score = match fragment.parse() {
             Ok(num) => num,
-            Err(e) => return Err(Error::new(ErrorKind::Other, format!("Error parsing score {}", fragment))),
+            Err(_e) => return Err(Error::new(ErrorKind::Other, format!("Error parsing score {}", fragment))),
         };
         scores.push(score);
     }

@@ -6,7 +6,7 @@ use controllers::score_round::score_round;
 use teloxide::Bot;
 use teloxide::types::Message;
 use teloxide::utils::command::BotCommands;
-use teloxide::{prelude::*};
+use teloxide::prelude::*;
 use std::result::Result;
 use std::env;
 use dotenv::dotenv;
@@ -55,11 +55,20 @@ async fn answer(
     command: Command,
 ) -> ResponseResult<()> {
     match command {
-        Command::Help => { bot.send_message(message.chat.id, Command::descriptions().to_string()).await? },
-        Command::Register => { bot.send_message(message.chat.id, register(&bot, message)).await? },
-        Command::NewGame => { bot.send_message(message.chat.id, new_game(&bot, message).await).await? },
-        Command::EndGame => { bot.send_message(message.chat.id, end_game(&bot, message).await).await? },
-        Command::Score => { bot.send_message(message.chat.id, score_round(&bot, message).await).await? },
+        Command::Help => { bot.send_message(message.chat.id, Command::descriptions().to_string()).await?; },
+        Command::Register => { bot.send_message(message.chat.id, register(&bot, message)).await?; },
+        Command::NewGame => { bot.send_message(message.chat.id, new_game(&bot, message).await).await?; },
+        Command::EndGame => end_game_handler(bot, message).await,
+        Command::Score => { bot.send_message(message.chat.id, score_round(&bot, message).await).await?; },
     };
     Ok(())
 }
+
+async fn end_game_handler(bot: Bot, message: Message) -> () {
+    let id = message.chat.id.clone();
+    match end_game(&bot, message).await {
+        Ok(file) => { let _ = bot.send_document(id, file).await; },
+        Err(e) => {let _ = bot.send_message(id, e.to_string()).await;},
+    };
+}
+

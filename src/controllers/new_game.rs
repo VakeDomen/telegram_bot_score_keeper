@@ -1,6 +1,6 @@
 use teloxide::{Bot, types::Message};
 
-use crate::{core::{game_handler::RUNNING_GAMES, traits::Game}, games::{tarok::tarok::Tarok, table::table::Table}};
+use crate::{core::{game_handler::RUNNING_GAMES, traits::Game}, games::table::table::Table};
 
 pub async fn new_game(
     _: &Bot,

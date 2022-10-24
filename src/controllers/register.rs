@@ -1,4 +1,4 @@
-use teloxide::{Bot, types::{Message, MediaKind, MessageKind}};
+use teloxide::{Bot, types::Message};
 
 use crate::{models::user::{NewUser, User}, core::{game_aggregator::GameAggregator, message_helper::extract_message_text}};
 use crate::core::database::user_operations::insert_user;

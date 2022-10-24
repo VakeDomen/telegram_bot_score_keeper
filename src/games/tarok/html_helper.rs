@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::models::user::User;
 
-pub fn build_score_table_html(players: Vec<User>, score_table: HashMap<String, Vec<Option<i32>>>, rounds: i32) -> String {
+pub fn _build_score_table_html(players: Vec<User>, score_table: HashMap<String, Vec<Option<i32>>>, rounds: i32) -> String {
     let mut table = String::from("");
     // generate table header
     for player in players.iter() {
@@ -28,17 +28,17 @@ pub fn build_score_table_html(players: Vec<User>, score_table: HashMap<String, V
         }
         table = format!("{}<tr>{}</tr>", table, line);
     }
-    format!("{}{}{}", get_html_head(), table, get_html_tail())
+    format!("{}{}{}", _get_html_head(), table, _get_html_tail())
 
 }
 
-fn get_html_tail() -> String {
+fn _get_html_tail() -> String {
     "</table>
     </body>
     </html>".to_string()
 }
 
-fn get_html_head() -> String {
+fn _get_html_head() -> String {
     "<!DOCTYPE html>
     <html lang='en'>
     <head>

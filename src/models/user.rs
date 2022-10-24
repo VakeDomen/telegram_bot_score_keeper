@@ -2,7 +2,7 @@ use std::io::{Error, ErrorKind};
 use uuid::Uuid;
 use super::schema::users;
 
-#[derive(Debug, Queryable, Insertable, PartialEq, Clone)]
+#[derive(Debug, Queryable, Insertable, Eq, PartialEq, Clone)]
 #[table_name = "users"]
 pub struct User {
     pub id: String,
@@ -18,7 +18,7 @@ pub struct NewUser {
     checked: NameCheckedState,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum NameCheckedState {
     Valid,
     Invalid,
