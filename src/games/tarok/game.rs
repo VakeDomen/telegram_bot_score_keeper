@@ -1,4 +1,4 @@
-use std::{collections::HashMap, io::{Error, ErrorKind}, hash::Hash};
+use std::{collections::HashMap, io::{Error, ErrorKind}};
 use chrono::Utc;
 
 use crate::{core::{traits::{CheckName, Game}, message_helper::extract_message_text, database::user_operations::get_user_by_name}, models::user::User};
@@ -109,7 +109,15 @@ impl Game for Tarok {
             };
         }
         let sum_by_player: HashMap<String, (i32, i32, i32)> = sum_score_by_players(&self.score, &self.players, &mut self.radlci);
-        Ok(build_score_table_html(&self.players, &self.score, self.round, sum_by_player, &self.radlci))
+        Ok(build_score_table_html(
+            &self.players, 
+            &self.score, 
+            self.round, 
+            sum_by_player, 
+            &self.radlci,
+            &mut self.player_attributes, 
+            &mut self.game_attributes,
+        ))
     }
 
     fn get_state(&mut self) -> Result<String, std::io::Error> {
@@ -121,7 +129,15 @@ impl Game for Tarok {
             };
         }
         let sum_by_player: HashMap<String, (i32, i32, i32)> = sum_score_by_players(&self.score, &self.players, &mut self.radlci);
-        Ok(build_score_table_html(&self.players, &self.score, self.round, sum_by_player, &self.radlci))
+        Ok(build_score_table_html(
+            &self.players, 
+            &self.score, 
+            self.round, 
+            sum_by_player, 
+            &self.radlci,
+            &mut self.player_attributes, 
+            &mut self.game_attributes,
+        ))
     }
 
     fn generate_file_name(&self) -> String { format!("{}_tarok.html", Utc::now()) }
@@ -349,14 +365,16 @@ fn handle_new_users(
         }
         players.push(user.clone());
         let mut player_score = vec![];
-        fill_gaps_until_round(&mut player_score, round);
+        let mut player_attributes = vec![];
+        fill_gaps_until_round::<i32>(&mut player_score, round);
+        fill_gaps_until_round::<Vec<TarokPlayerInput>>(&mut player_attributes, round);
         score.insert(user.id.clone(), player_score);
-        global_player_attributes.insert(user.id.clone(), vec![]);
+        global_player_attributes.insert(user.id.clone(), player_attributes);
         radlci.insert(user.id.clone(), vec![]);
     }
 }
 
-fn fill_gaps_until_round(score: &mut Vec<Option<i32>>, round: &i32) {
+fn fill_gaps_until_round<T>(score: &mut Vec<Option<T>>, round: &i32) {
     if score.len() < (*round) as usize {
         for _ in score.len()..(*round - 1) as usize {
             score.push(None);
@@ -1092,9 +1110,21 @@ fn add_playing_attribute_to_first_player(
 
 fn calculate_base_game_points(round_game_attributes: &Vec<TarokGameInput>) -> i32 {
     // get points of the game
+    let mut base_score = 0;
     let mut game_points = 0;
+    let mut lost = false;
     for g_attr in round_game_attributes.iter() {
-        game_points += attribute_worth(g_attr)
+        game_points += attribute_worth(g_attr);
+        
+        if let TarokGameInput::TarokGameDiff(val) = g_attr {
+            if *val < 0 { lost = true ; }
+        }
+        if let TarokGameInput::TarokGame(g) = g_attr {
+            base_score = game_worth(*g);
+        }
+    }
+    if lost {
+        game_points -= 2 * base_score;
     }
     game_points
 }
@@ -1122,7 +1152,7 @@ fn save_round_to_sheets(
     }
 
     // save player attributes to global sheet
-    if let Err(e) = save_player_attributes(round_player_attributes, global_player_attributes) {
+    if let Err(e) = save_player_attributes(round_player_attributes, round, global_player_attributes) {
         return Err(Error::new(ErrorKind::Other, format!("Failed saving player attributes to sheet: {}", e)))
     }
 
@@ -1154,11 +1184,15 @@ fn save_score(
 
 fn save_player_attributes(
     round_player_attributes: HashMap<String, Vec<TarokPlayerInput>>, 
+    round: &i32, 
     global_player_attributes: &mut HashMap<String, Vec<Option<Vec<TarokPlayerInput>>>>
 ) -> Result<(), Error> {
     for (player_id, attributes) in round_player_attributes.into_iter() {
         match global_player_attributes.get_mut(&player_id) {
-            Some(sh) => sh.push(Some(attributes)),
+            Some(sh) => {
+                fill_gaps_until_round(sh, round);
+                sh.push(Some(attributes))
+            },
             None => return Err(Error::new(ErrorKind::Other, format!("Player attribute sheet missing"))),
         }
     }
