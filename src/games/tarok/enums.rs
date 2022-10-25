@@ -11,7 +11,7 @@ pub enum TarokPlayerInput {
     PlayerDiff(i32),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum TarokGame {
     I3,
     I2,

@@ -7,8 +7,10 @@ use super::enums::{TarokGameInput, TarokGame, TarokGameAttribute, TarokPlayerAtt
 
 pub struct Tarok {
     players: Vec<User>,
-    _radlci: HashMap<String, i32>,
+    radlci: HashMap<String, i32>,
     score: HashMap<String, Vec<Option<i32>>>,
+    player_attributes: HashMap<String, Vec<Option<TarokPlayerInput>>>,
+    game_attributes: HashMap<String, Vec<Option<TarokGameInput>>>,
     round: i32,
 }
 
@@ -16,8 +18,10 @@ impl Tarok {
     pub fn new() -> Self {
         Self {
             players: vec![],
-            _radlci: HashMap::new(),
+            radlci: HashMap::new(),
             score: HashMap::new(),
+            player_attributes: HashMap::new(),
+            game_attributes: HashMap::new(),
             round: 0
         }
     }
@@ -63,8 +67,22 @@ impl Game for Tarok {
             Err(e) => return Err(Error::new(ErrorKind::Other, format!("Failed to extract player attributes: {}", e)))
         };
 
+        match handle_game(
+            &mut self.players, 
+            &mut self.score, 
+            &self.round,
+            &mut radlci,
+            &mut self.player_attributes,
+            &mut self.game_attributes,
+            player_attributes,
+            game_attributes,
+        ) {
+            Ok(_) => (),
+            Err(e) => return Err(Error::new(ErrorKind::Other, format!("Failed to calculate round: {}", e)))
+        }
+
         self.round += 1;
-        Ok(format!("{:#?} \n{:#?}\n{:#?}", extract_round_game_fragment(&text), game_attributes, player_attributes))
+        Ok(format!("{:#?} \n", extract_round_game_fragment(&text)))
     }
 
     fn end_game(self: Box<Self>) -> Result<String, std::io::Error> {
@@ -298,5 +316,363 @@ fn extract_round_player_fragment(message_text: &String) -> Option<String> {
         None
     } else {
         Some(fragments.join(" "))
+    }
+}
+
+fn handle_game(
+    players: &[User], 
+    score: &mut HashMap<String, Vec<Option<i32>>>, 
+    round: &i32, 
+    radlci: HashMap<String, i32>,
+    global_player_attributes: &mut HashMap<String, Vec<Option<TarokPlayerInput>>>,
+    global_game_attributes: &mut HashMap<String, Vec<Option<TarokGameInput>>>,
+    round_player_attributes: HashMap<String, Vec<TarokPlayerInput>>,
+    round_game_attributes: Vec<TarokGameInput>,
+) -> Result<(), Error> {
+    // find what game we are playing
+    let game: TarokGame = match find_tarok_game(&round_game_attributes) {
+        Some(game) => game,
+        None => return Err(Error::new(ErrorKind::Other, "No game specified".to_string())),
+    };
+    match game {
+        TarokGame::I3 => playI3(players, score, round, radlci, global_player_attributes, global_game_attributes, round_player_attributes, round_game_attributes),
+        TarokGame::I2 => playI2(players, score, round, radlci, global_player_attributes, global_game_attributes, round_player_attributes, round_game_attributes),
+        TarokGame::I1 => playI1(players, score, round, radlci, global_player_attributes, global_game_attributes, round_player_attributes, round_game_attributes),
+        TarokGame::S3 => playS3(players, score, round, radlci, global_player_attributes, global_game_attributes, round_player_attributes, round_game_attributes),
+        TarokGame::S2 => playS2(players, score, round, radlci, global_player_attributes, global_game_attributes, round_player_attributes, round_game_attributes),
+        TarokGame::S1 => playS1(players, score, round, radlci, global_player_attributes, global_game_attributes, round_player_attributes, round_game_attributes),
+        TarokGame::SB => playSB(players, score, round, radlci, global_player_attributes, global_game_attributes, round_player_attributes, round_game_attributes),
+        TarokGame::KL => playKL(players, score, round, radlci, global_player_attributes, global_game_attributes, round_player_attributes, round_game_attributes),
+        TarokGame::B => playB(players, score, round, radlci, global_player_attributes, global_game_attributes, round_player_attributes, round_game_attributes),
+        TarokGame::P => playP(players, score, round, radlci, global_player_attributes, global_game_attributes, round_player_attributes, round_game_attributes),
+        TarokGame::BVI3 => playBVI3(players, score, round, radlci, global_player_attributes, global_game_attributes, round_player_attributes, round_game_attributes),
+        TarokGame::BVI2 => playBVI2(players, score, round, radlci, global_player_attributes, global_game_attributes, round_player_attributes, round_game_attributes),
+        TarokGame::BVI1 => playBVI1(players, score, round, radlci, global_player_attributes, global_game_attributes, round_player_attributes, round_game_attributes),
+        TarokGame::BVS3 => playBVS3(players, score, round, radlci, global_player_attributes, global_game_attributes, round_player_attributes, round_game_attributes),
+        TarokGame::BVS2 => playBVS2(players, score, round, radlci, global_player_attributes, global_game_attributes, round_player_attributes, round_game_attributes),
+        TarokGame::BVS1 => playBVS1(players, score, round, radlci, global_player_attributes, global_game_attributes, round_player_attributes, round_game_attributes),
+        TarokGame::BVSB => playBVSB(players, score, round, radlci, global_player_attributes, global_game_attributes, round_player_attributes, round_game_attributes),
+    }
+}
+
+fn playBVSB(
+    players: &[User], 
+    score: &mut HashMap<String, Vec<Option<i32>>>, 
+    round: &i32, 
+    radlci: HashMap<String, i32>,
+    global_player_attributes: &mut HashMap<String, Vec<Option<TarokPlayerInput>>>, 
+    global_game_attributes: &mut HashMap<String, Vec<Option<TarokGameInput>>>, 
+    round_player_attributes: HashMap<String, Vec<TarokPlayerInput>>, 
+    round_game_attributes: Vec<TarokGameInput>
+) -> Result<(), Error> {
+    let points = match game_worth(TarokGame::BVSB) {
+        Some(p) => p,
+        None => return Err(Error::new(ErrorKind::Other, format!("Can't determine points for game TarokGame::BVSB")))
+    };
+    Ok(())
+}
+
+fn playBVS1(
+    players: &[User], 
+    score: &mut HashMap<String, Vec<Option<i32>>>, 
+    round: &i32, 
+    radlci: HashMap<String, i32>,
+    global_player_attributes: &mut HashMap<String, Vec<Option<TarokPlayerInput>>>, 
+    global_game_attributes: &mut HashMap<String, Vec<Option<TarokGameInput>>>, 
+    round_player_attributes: HashMap<String, Vec<TarokPlayerInput>>, 
+    round_game_attributes: Vec<TarokGameInput>
+) -> Result<(), Error> {
+    let points = match game_worth(TarokGame::BVS1) {
+        Some(p) => p,
+        None => return Err(Error::new(ErrorKind::Other, format!("Can't determine points for game TarokGame::BVS1")))
+    };
+    Ok(())
+}
+
+fn playBVS2(
+    players: &[User], 
+    score: &mut HashMap<String, Vec<Option<i32>>>, 
+    round: &i32, 
+    radlci: HashMap<String, i32>,
+    global_player_attributes: &mut HashMap<String, Vec<Option<TarokPlayerInput>>>, 
+    global_game_attributes: &mut HashMap<String, Vec<Option<TarokGameInput>>>, 
+    round_player_attributes: HashMap<String, Vec<TarokPlayerInput>>, 
+    round_game_attributes: Vec<TarokGameInput>
+) -> Result<(), Error> {
+    let points = match game_worth(TarokGame::BVS2) {
+        Some(p) => p,
+        None => return Err(Error::new(ErrorKind::Other, format!("Can't determine points for game TarokGame::BVS2")))
+    };
+    Ok(())
+}
+
+fn playBVS3(
+    players: &[User], 
+    score: &mut HashMap<String, Vec<Option<i32>>>, 
+    round: &i32, 
+    radlci: HashMap<String, i32>,
+    global_player_attributes: &mut HashMap<String, Vec<Option<TarokPlayerInput>>>, 
+    global_game_attributes: &mut HashMap<String, Vec<Option<TarokGameInput>>>, 
+    round_player_attributes: HashMap<String, Vec<TarokPlayerInput>>, 
+    round_game_attributes: Vec<TarokGameInput>
+) -> Result<(), Error> {
+    let points = match game_worth(TarokGame::BVS3) {
+        Some(p) => p,
+        None => return Err(Error::new(ErrorKind::Other, format!("Can't determine points for game TarokGame::BVS3")))
+    };
+    Ok(())
+}
+
+fn playBVI1(
+    players: &[User], 
+    score: &mut HashMap<String, Vec<Option<i32>>>, 
+    round: &i32, 
+    radlci: HashMap<String, i32>,
+    global_player_attributes: &mut HashMap<String, Vec<Option<TarokPlayerInput>>>, 
+    global_game_attributes: &mut HashMap<String, Vec<Option<TarokGameInput>>>, 
+    round_player_attributes: HashMap<String, Vec<TarokPlayerInput>>, 
+    round_game_attributes: Vec<TarokGameInput>
+) -> Result<(), Error> {
+    let points = match game_worth(TarokGame::BVI1) {
+        Some(p) => p,
+        None => return Err(Error::new(ErrorKind::Other, format!("Can't determine points for game TarokGame::BVI1")))
+    };
+    Ok(())
+}
+
+fn playBVI2(
+    players: &[User], 
+    score: &mut HashMap<String, Vec<Option<i32>>>, 
+    round: &i32, 
+    radlci: HashMap<String, i32>,
+    global_player_attributes: &mut HashMap<String, Vec<Option<TarokPlayerInput>>>, 
+    global_game_attributes: &mut HashMap<String, Vec<Option<TarokGameInput>>>, 
+    round_player_attributes: HashMap<String, Vec<TarokPlayerInput>>, 
+    round_game_attributes: Vec<TarokGameInput>
+) -> Result<(), Error> {
+    let points = match game_worth(TarokGame::BVI2) {
+        Some(p) => p,
+        None => return Err(Error::new(ErrorKind::Other, format!("Can't determine points for game TarokGame::BVI2")))
+    };
+    Ok(())
+}
+
+fn playBVI3(
+    players: &[User], 
+    score: &mut HashMap<String, Vec<Option<i32>>>, 
+    round: &i32, 
+    radlci: HashMap<String, i32>,
+    global_player_attributes: &mut HashMap<String, Vec<Option<TarokPlayerInput>>>, 
+    global_game_attributes: &mut HashMap<String, Vec<Option<TarokGameInput>>>, 
+    round_player_attributes: HashMap<String, Vec<TarokPlayerInput>>, 
+    round_game_attributes: Vec<TarokGameInput>
+) -> Result<(), Error> {
+    let points = match game_worth(TarokGame::BVI3) {
+        Some(p) => p,
+        None => return Err(Error::new(ErrorKind::Other, format!("Can't determine points for game TarokGame::BVI3")))
+    };
+    Ok(())
+}
+
+fn playP(
+    players: &[User], 
+    score: &mut HashMap<String, Vec<Option<i32>>>, 
+    round: &i32, 
+    radlci: HashMap<String, i32>,
+    global_player_attributes: &mut HashMap<String, Vec<Option<TarokPlayerInput>>>, 
+    global_game_attributes: &mut HashMap<String, Vec<Option<TarokGameInput>>>, 
+    round_player_attributes: HashMap<String, Vec<TarokPlayerInput>>, 
+    round_game_attributes: Vec<TarokGameInput>
+) -> Result<(), Error> {
+    let points = match game_worth(TarokGame::P) {
+        Some(p) => p,
+        None => return Err(Error::new(ErrorKind::Other, format!("Can't determine points for game TarokGame::P")))
+    };
+    Ok(())
+}
+
+fn playB(
+    players: &[User], 
+    score: &mut HashMap<String, Vec<Option<i32>>>, 
+    round: &i32, 
+    radlci: HashMap<String, i32>,
+    global_player_attributes: &mut HashMap<String, Vec<Option<TarokPlayerInput>>>, 
+    global_game_attributes: &mut HashMap<String, Vec<Option<TarokGameInput>>>, 
+    round_player_attributes: HashMap<String, Vec<TarokPlayerInput>>, 
+    round_game_attributes: Vec<TarokGameInput>
+) -> Result<(), Error> {
+    let points = match game_worth(TarokGame::B) {
+        Some(p) => p,
+        None => return Err(Error::new(ErrorKind::Other, format!("Can't determine points for game TarokGame::B")))
+    };
+    Ok(())
+}
+
+fn playKL(
+    players: &[User], 
+    score: &mut HashMap<String, Vec<Option<i32>>>, 
+    round: &i32, 
+    radlci: HashMap<String, i32>,
+    global_player_attributes: &mut HashMap<String, Vec<Option<TarokPlayerInput>>>, 
+    global_game_attributes: &mut HashMap<String, Vec<Option<TarokGameInput>>>, 
+    round_player_attributes: HashMap<String, Vec<TarokPlayerInput>>, 
+    round_game_attributes: Vec<TarokGameInput>
+) -> Result<(), Error> {
+    let points = match game_worth(TarokGame::KL) {
+        Some(p) => p,
+        None => return Err(Error::new(ErrorKind::Other, format!("Can't determine points for game TarokGame::KL")))
+    };
+    Ok(())
+}
+
+fn playSB(
+    players: &[User], 
+    score: &mut HashMap<String, Vec<Option<i32>>>, 
+    round: &i32, 
+    radlci: HashMap<String, i32>,
+    global_player_attributes: &mut HashMap<String, Vec<Option<TarokPlayerInput>>>, 
+    global_game_attributes: &mut HashMap<String, Vec<Option<TarokGameInput>>>, 
+    round_player_attributes: HashMap<String, Vec<TarokPlayerInput>>, 
+    round_game_attributes: Vec<TarokGameInput>
+) -> Result<(), Error> {
+    let points = match game_worth(TarokGame::SB) {
+        Some(p) => p,
+        None => return Err(Error::new(ErrorKind::Other, format!("Can't determine points for game TarokGame::SB")))
+    };
+    Ok(())
+}
+
+fn playS1(
+    players: &[User], 
+    score: &mut HashMap<String, Vec<Option<i32>>>, 
+    round: &i32, 
+    radlci: HashMap<String, i32>,
+    global_player_attributes: &mut HashMap<String, Vec<Option<TarokPlayerInput>>>, 
+    global_game_attributes: &mut HashMap<String, Vec<Option<TarokGameInput>>>, 
+    round_player_attributes: HashMap<String, Vec<TarokPlayerInput>>, 
+    round_game_attributes: Vec<TarokGameInput>
+) -> Result<(), Error> {
+    let points = match game_worth(TarokGame::S1) {
+        Some(p) => p,
+        None => return Err(Error::new(ErrorKind::Other, format!("Can't determine points for game TarokGame::S1")))
+    };
+    Ok(())
+}
+
+fn playS2(
+    players: &[User], 
+    score: &mut HashMap<String, Vec<Option<i32>>>, 
+    round: &i32, 
+    radlci: HashMap<String, i32>,
+    global_player_attributes: &mut HashMap<String, Vec<Option<TarokPlayerInput>>>, 
+    global_game_attributes: &mut HashMap<String, Vec<Option<TarokGameInput>>>, 
+    round_player_attributes: HashMap<String, Vec<TarokPlayerInput>>, 
+    round_game_attributes: Vec<TarokGameInput>
+) -> Result<(), Error> {
+    let points = match game_worth(TarokGame::S2) {
+        Some(p) => p,
+        None => return Err(Error::new(ErrorKind::Other, format!("Can't determine points for game TarokGame::S2")))
+    };
+    Ok(())
+}
+
+fn playS3(
+    players: &[User], 
+    score: &mut HashMap<String, Vec<Option<i32>>>, 
+    round: &i32, 
+    radlci: HashMap<String, i32>,
+    global_player_attributes: &mut HashMap<String, Vec<Option<TarokPlayerInput>>>, 
+    global_game_attributes: &mut HashMap<String, Vec<Option<TarokGameInput>>>, 
+    round_player_attributes: HashMap<String, Vec<TarokPlayerInput>>, 
+    round_game_attributes: Vec<TarokGameInput>
+) -> Result<(), Error> {
+    let points = match game_worth(TarokGame::S3) {
+        Some(p) => p,
+        None => return Err(Error::new(ErrorKind::Other, format!("Can't determine points for game TarokGame::S3")))
+    };
+    Ok(())
+}
+
+fn playI1(
+    players: &[User], 
+    score: &mut HashMap<String, Vec<Option<i32>>>, 
+    round: &i32, 
+    radlci: HashMap<String, i32>,
+    global_player_attributes: &mut HashMap<String, Vec<Option<TarokPlayerInput>>>, 
+    global_game_attributes: &mut HashMap<String, Vec<Option<TarokGameInput>>>, 
+    round_player_attributes: HashMap<String, Vec<TarokPlayerInput>>, 
+    round_game_attributes: Vec<TarokGameInput>
+) -> Result<(), Error> {
+    let points = match game_worth(TarokGame::I1) {
+        Some(p) => p,
+        None => return Err(Error::new(ErrorKind::Other, format!("Can't determine points for game TarokGame::I1")))
+    };
+    Ok(())
+}
+
+fn playI2(
+    players: &[User], 
+    score: &mut HashMap<String, Vec<Option<i32>>>, 
+    round: &i32, 
+    radlci: HashMap<String, i32>,
+    global_player_attributes: &mut HashMap<String, Vec<Option<TarokPlayerInput>>>, 
+    global_game_attributes: &mut HashMap<String, Vec<Option<TarokGameInput>>>, 
+    round_player_attributes: HashMap<String, Vec<TarokPlayerInput>>, 
+    round_game_attributes: Vec<TarokGameInput>
+) -> Result<(), Error> {
+    let points = match game_worth(TarokGame::I2) {
+        Some(p) => p,
+        None => return Err(Error::new(ErrorKind::Other, format!("Can't determine points for game TarokGame::I2")))
+    };
+    Ok(())
+}
+
+
+fn playI3(
+    players: &[User], 
+    score: &mut HashMap<String, Vec<Option<i32>>>, 
+    round: &i32, 
+    radlci: HashMap<String, i32>,
+    global_player_attributes: &mut HashMap<String, Vec<Option<TarokPlayerInput>>>, 
+    global_game_attributes: &mut HashMap<String, Vec<Option<TarokGameInput>>>, 
+    round_player_attributes: HashMap<String, Vec<TarokPlayerInput>>, 
+    round_game_attributes: Vec<TarokGameInput>
+) -> Result<(), Error> {
+    let points = match game_worth(TarokGame::I3) {
+        Some(p) => p,
+        None => return Err(Error::new(ErrorKind::Other, format!("Can't determine points for game TarokGame::I2")))
+    };
+    Ok(())
+}
+
+fn find_tarok_game(round_game_attributes: &[TarokGameInput]) -> Option<TarokGame> {
+    for input in round_game_attributes.iter() {
+        if let TarokGameInput::TarokGame(game) = input {
+            return Some(game.clone());
+        }
+    }
+    None
+}
+
+fn game_worth(g: TarokGame) -> Option<i32> {
+    match g {
+        TarokGame::I3 => Some(10),
+        TarokGame::I2 => Some(20),
+        TarokGame::I1 => Some(30),
+        TarokGame::S3 => Some(40),
+        TarokGame::S2 => Some(50),
+        TarokGame::S1 => Some(60),
+        TarokGame::SB => Some(80),
+        TarokGame::KL => Some(0),
+        TarokGame::B => Some(70),
+        TarokGame::P => Some(60),
+        TarokGame::BVI3 => Some(90),
+        TarokGame::BVI2 => Some(100),
+        TarokGame::BVI1 => Some(110),
+        TarokGame::BVS3 => Some(120),
+        TarokGame::BVS2 => Some(130),
+        TarokGame::BVS1 => Some(140),
+        TarokGame::BVSB => Some(150),
+        _ => None
     }
 }
