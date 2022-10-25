@@ -1,10 +1,9 @@
 use std::{collections::HashMap, io::{Error, ErrorKind}};
-
 use chrono::Utc;
 
 use crate::{core::{traits::{CheckName, Game}, message_helper::extract_message_text, database::user_operations::get_user_by_name}, models::user::User};
 
-use super::enums::{TarokGameInput, TarokGame, TarokGameAttribute};
+use super::enums::{TarokGameInput, TarokGame, TarokGameAttribute, TarokPlayerAttibute, TarokPlayerInput};
 
 pub struct Tarok {
     players: Vec<User>,
@@ -59,8 +58,13 @@ impl Game for Tarok {
             Err(e) => return Err(Error::new(ErrorKind::Other, format!("Failed to extract game attributes: {}", e)))
         };
 
+        let player_attributes: HashMap<String, Vec<TarokPlayerInput>> = match extract_player_attributes(&self.players, &text) {
+            Ok(attr) => attr,
+            Err(e) => return Err(Error::new(ErrorKind::Other, format!("Failed to extract player attributes: {}", e)))
+        };
+
         self.round += 1;
-        Ok(format!("{:#?} \n{:#?}", extract_round_game_fragment(&text), game_attributes))
+        Ok(format!("{:#?} \n{:#?}\n{:#?}", extract_round_game_fragment(&text), game_attributes, player_attributes))
     }
 
     fn end_game(self: Box<Self>) -> Result<String, std::io::Error> {
@@ -72,6 +76,38 @@ impl Game for Tarok {
     }
 
     fn generate_file_name(&self) -> String { format!("{}_tarok.html", Utc::now()) }
+}
+
+fn extract_player_attributes(players: &[User], text: &String) -> Result<HashMap<String, Vec<TarokPlayerInput>>, Error> {
+    let fragment = match extract_round_player_fragment(&text) {
+        Some(frag) => frag,
+        None => return Err(Error::new(ErrorKind::Other, "Failed to locate player fragment".to_string())),
+    };
+    let mut out = HashMap::new();
+    for player_fragment in fragment.split(' ') {
+        let mut inputs = vec![];
+        let user = match parse_user_from_fragment(&player_fragment.to_string()) {
+            Ok(user) => user,
+            Err(e) => return Err(Error::new(ErrorKind::Other, format!("Failed parsing player from fragment: {}", e))),
+        };
+        for player_partial in player_fragment.split(',').skip(1) {
+            let mut attr_option = match parse_player_attribute_fragment(player_partial) {
+                Some(val) => Some(TarokPlayerInput::PlayerAttribute(val)),
+                None => None,
+            };
+            let mut diff_option = match parse_diff_option_fragment(player_partial) {
+                Some(val) => Some(TarokPlayerInput::PlayerDiff(val)),
+                None => None,
+            };
+            match (attr_option, diff_option) {
+                (None, None) => return Err(Error::new(ErrorKind::Other, format!("Could not recognize player attribute: {}", player_partial))),
+                (_, Some(diff)) => inputs.push(diff),
+                (Some(attr), _) => inputs.push(attr),
+            }
+        }
+        out.insert(user.id, inputs);
+    }
+    Ok(out)
 }
 
 fn extract_game_attributes(text: &String) -> Result<Vec<TarokGameInput>, Error> {
@@ -108,7 +144,7 @@ fn extract_game_attributes(text: &String) -> Result<Vec<TarokGameInput>, Error> 
         if game_diff_found {
             diff_option = None;
         }
-        if game_option.is_some() {
+        if diff_option.is_some() {
             game_diff_found = true;
         }
         match (game_option, attribute_option, diff_option) {
@@ -118,7 +154,21 @@ fn extract_game_attributes(text: &String) -> Result<Vec<TarokGameInput>, Error> 
             (_, _, Some(val)) => inputs.push(val),
         };
     }
-    Ok(inputs)
+
+    match game_found {
+        true => Ok(inputs),
+        false => return Err(Error::new(ErrorKind::Other, format!("No game specified."))),
+    }
+    
+}
+
+fn parse_player_attribute_fragment(partial_fragment: &str) -> Option<TarokPlayerAttibute> {
+    match partial_fragment.to_uppercase().as_str() {
+        "M" => Some(TarokPlayerAttibute::M),
+        "R" => Some(TarokPlayerAttibute::R),
+        "T" => Some(TarokPlayerAttibute::T),
+        _ => None,
+    }
 }
 
 fn parse_diff_option_fragment(partial_fragment: &str) -> Option<i32> {
@@ -190,30 +240,43 @@ fn fill_gaps_until_round(score: &mut Vec<Option<i32>>, round: &i32) {
 }
 
 fn extract_round_users(message_text: &String) -> Result<Vec<User>, Error> {
-    let mut users = vec![];
     let fragment = match extract_round_player_fragment(message_text) {
         Some(fragment) => fragment,
         None => return Err(Error::new(ErrorKind::Other, "Can't find any users to parse :(".to_string())),
     };
+    match parse_users_from_fragment(&fragment) {
+        Ok(users) => Ok(users),
+        Err(e) => return Err(Error::new(ErrorKind::Other, format!("Failed parsing players: {}", e))),
+    }
+}
+
+fn parse_users_from_fragment(fragment: &String) -> Result<Vec<User>, Error> {
+    let mut users = vec![];
     for user_framgent in fragment.split(' ') {
         // extract name from user fragment (JAN,M -> JAN)
-        let user_name = match user_framgent.split(',').nth(0) {
-            Some(name) => name,
-            None => return Err(Error::new(ErrorKind::Other, format!("Can't parse a users :( {}", user_framgent))),
+        match parse_user_from_fragment(&user_framgent.to_string()) {
+            Ok(user) => users.push(user),
+            Err(e) => return Err(Error::new(ErrorKind::Other, format!("Failed parsing player: {}", e))),
         };
-        // try to find user in database
-        let user_option = match get_user_by_name(user_name.to_uppercase()) {
-            Ok(data) => data,
-            Err(e) => return Err(Error::new(ErrorKind::Other, format!("Error fetching user from DB: {}", e))),
-        };
-        // check if user found in database
-        let user = match user_option {
-            Some(user) => user,
-            None => return Err(Error::new(ErrorKind::Other, "Error fetching user from DB".to_string())),
-        };
-        users.push(user);
     }
     Ok(users)
+}
+
+fn parse_user_from_fragment(fragment: &String) -> Result<User, Error> {
+    let user_name = match fragment.split(',').nth(0) {
+        Some(name) => name,
+        None => return Err(Error::new(ErrorKind::Other, format!("Can't parse a users :( {}", fragment))),
+    };
+    // try to find user in database
+    let user_option = match get_user_by_name(user_name.to_uppercase()) {
+        Ok(data) => data,
+        Err(e) => return Err(Error::new(ErrorKind::Other, format!("Error fetching user from DB: {}", e))),
+    };
+    // check if user found in database
+    match user_option {
+        Some(user) => Ok(user),
+        None => return Err(Error::new(ErrorKind::Other, "Error fetching user from DB".to_string())),
+    }
 }
 
 fn extract_round_game_fragment(message_text: &String) -> Option<String> {

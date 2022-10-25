@@ -6,6 +6,12 @@ pub enum TarokGameInput {
 }
 
 #[derive(Debug)]
+pub enum TarokPlayerInput {
+    PlayerAttribute(TarokPlayerAttibute),
+    PlayerDiff(i32),
+}
+
+#[derive(Debug)]
 pub enum TarokGame {
     I3,
     I2,
@@ -41,4 +47,6 @@ pub enum TarokGameAttribute {
 #[derive(Debug)]
 pub enum TarokPlayerAttibute {
     M,
+    R,
+    T,
 }
