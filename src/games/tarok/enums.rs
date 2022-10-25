@@ -11,7 +11,7 @@ pub enum TarokPlayerInput {
     PlayerDiff(i32),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum TarokGame {
     I3,
     I2,
@@ -34,14 +34,16 @@ pub enum TarokGame {
 
 #[derive(Debug)]
 pub enum TarokGameAttribute {
-    P,
-    K,
+    ZP,
+    ZK,
     V,
     T,
-    NP,
-    NK,
+    K,
+    NZP,
+    NZK,
     NV,
     NT,
+    NK,
 }
 
 #[derive(Debug)]
@@ -49,4 +51,12 @@ pub enum TarokPlayerAttibute {
     M,
     R,
     T,
+    Ig,
+    Sl,
+}
+
+#[derive(Debug)]
+pub enum Radlc {
+    Avalible,
+    Used,
 }
