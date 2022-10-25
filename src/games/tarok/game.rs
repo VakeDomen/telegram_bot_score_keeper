@@ -64,7 +64,7 @@ impl Game for Tarok {
             Err(e) => return Err(Error::new(ErrorKind::Other, format!("Failed to extract game attributes: {}", e)))
         };
 
-        let mut player_attributes: HashMap<String, Vec<TarokPlayerInput>> = match extract_player_attributes(&self.players, &text) {
+        let mut player_attributes: HashMap<String, Vec<TarokPlayerInput>> = match extract_player_attributes(&text) {
             Ok(attr) => attr,
             Err(e) => return Err(Error::new(ErrorKind::Other, format!("Failed to extract player attributes: {}", e)))
         };
@@ -103,7 +103,7 @@ impl Game for Tarok {
     fn generate_file_name(&self) -> String { format!("{}_tarok.html", Utc::now()) }
 }
 
-fn extract_player_attributes(players: &[User], text: &String) -> Result<HashMap<String, Vec<TarokPlayerInput>>, Error> {
+fn extract_player_attributes(text: &String) -> Result<HashMap<String, Vec<TarokPlayerInput>>, Error> {
     let fragment = match extract_round_player_fragment(&text) {
         Some(frag) => frag,
         None => return Err(Error::new(ErrorKind::Other, "Failed to locate player fragment".to_string())),
@@ -116,11 +116,11 @@ fn extract_player_attributes(players: &[User], text: &String) -> Result<HashMap<
             Err(e) => return Err(Error::new(ErrorKind::Other, format!("Failed parsing player from fragment: {}", e))),
         };
         for player_partial in player_fragment.split(',').skip(1) {
-            let mut attr_option = match parse_player_attribute_fragment(player_partial) {
+            let attr_option = match parse_player_attribute_fragment(player_partial) {
                 Some(val) => Some(TarokPlayerInput::PlayerAttribute(val)),
                 None => None,
             };
-            let mut diff_option = match parse_diff_option_fragment(player_partial) {
+            let diff_option = match parse_diff_option_fragment(player_partial) {
                 Some(val) => Some(TarokPlayerInput::PlayerDiff(val)),
                 None => None,
             };
@@ -346,27 +346,27 @@ fn handle_game(
         None => return Err(Error::new(ErrorKind::Other, "No game specified".to_string())),
     };
     match game {
-        TarokGame::I3 => playI3(round_players, score, radlci, round_player_attributes, round_game_attributes),
-        TarokGame::I2 => playI2(round_players, score, radlci, round_player_attributes, round_game_attributes),
-        TarokGame::I1 => playI1(round_players, score, radlci, round_player_attributes, round_game_attributes),
-        TarokGame::S3 => playS3(round_players, score, radlci, round_player_attributes, round_game_attributes),
-        TarokGame::S2 => playS2(round_players, score, radlci, round_player_attributes, round_game_attributes),
-        TarokGame::S1 => playS1(round_players, score, radlci, round_player_attributes, round_game_attributes),
-        TarokGame::SB => playSB(round_players, score, radlci, round_player_attributes, round_game_attributes),
-        TarokGame::KL => playKL(round_players, score, radlci, round_player_attributes, round_game_attributes),
-        TarokGame::B => playB(round_players, score, radlci, round_player_attributes, round_game_attributes),
-        TarokGame::P => playP(round_players, score, radlci, round_player_attributes, round_game_attributes),
-        TarokGame::BVI3 => playBVI3(round_players, score, radlci, round_player_attributes, round_game_attributes),
-        TarokGame::BVI2 => playBVI2(round_players, score, radlci, round_player_attributes, round_game_attributes),
-        TarokGame::BVI1 => playBVI1(round_players, score, radlci, round_player_attributes, round_game_attributes),
-        TarokGame::BVS3 => playBVS3(round_players, score, radlci, round_player_attributes, round_game_attributes),
-        TarokGame::BVS2 => playBVS2(round_players, score, radlci, round_player_attributes, round_game_attributes),
-        TarokGame::BVS1 => playBVS1(round_players, score, radlci, round_player_attributes, round_game_attributes),
-        TarokGame::BVSB => playBVSB(round_players, score, radlci, round_player_attributes, round_game_attributes),
+        TarokGame::I3 => play_I3(round_players, score, radlci, round_player_attributes, round_game_attributes),
+        TarokGame::I2 => play_I2(round_players, score, radlci, round_player_attributes, round_game_attributes),
+        TarokGame::I1 => play_I1(round_players, score, radlci, round_player_attributes, round_game_attributes),
+        TarokGame::S3 => play_S3(round_players, score, radlci, round_player_attributes, round_game_attributes),
+        TarokGame::S2 => play_S2(round_players, score, radlci, round_player_attributes, round_game_attributes),
+        TarokGame::S1 => play_S1(round_players, score, radlci, round_player_attributes, round_game_attributes),
+        TarokGame::SB => play_SB(round_players, score, radlci, round_player_attributes, round_game_attributes),
+        TarokGame::KL => play_KL(round_players, score, radlci, round_player_attributes, round_game_attributes),
+        TarokGame::B => play_B(round_players, score, radlci, round_player_attributes, round_game_attributes),
+        TarokGame::P => play_P(round_players, score, radlci, round_player_attributes, round_game_attributes),
+        TarokGame::BVI3 => play_BVI3(round_players, score, radlci, round_player_attributes, round_game_attributes),
+        TarokGame::BVI2 => play_BVI2(round_players, score, radlci, round_player_attributes, round_game_attributes),
+        TarokGame::BVI1 => play_BVI1(round_players, score, radlci, round_player_attributes, round_game_attributes),
+        TarokGame::BVS3 => play_BVS3(round_players, score, radlci, round_player_attributes, round_game_attributes),
+        TarokGame::BVS2 => play_BVS2(round_players, score, radlci, round_player_attributes, round_game_attributes),
+        TarokGame::BVS1 => play_BVS1(round_players, score, radlci, round_player_attributes, round_game_attributes),
+        TarokGame::BVSB => play_BVSB(round_players, score, radlci, round_player_attributes, round_game_attributes),
     }
 }
 
-fn playBVSB(
+fn play_BVSB(
     round_players: &[User], 
     score: &mut HashMap<String, Vec<Option<i32>>>, 
     radlci: &mut HashMap<String, Vec<Radlc>>,
@@ -398,7 +398,7 @@ fn playBVSB(
     Ok(changes)
 }
 
-fn playBVS1(
+fn play_BVS1(
     round_players: &[User], 
     score: &mut HashMap<String, Vec<Option<i32>>>, 
     radlci: &mut HashMap<String, Vec<Radlc>>,
@@ -430,7 +430,7 @@ fn playBVS1(
     Ok(changes)
 }
 
-fn playBVS2(
+fn play_BVS2(
     round_players: &[User], 
     score: &mut HashMap<String, Vec<Option<i32>>>, 
     radlci: &mut HashMap<String, Vec<Radlc>>,
@@ -462,7 +462,7 @@ fn playBVS2(
     Ok(changes)
 }
 
-fn playBVS3(
+fn play_BVS3(
     round_players: &[User], 
     score: &mut HashMap<String, Vec<Option<i32>>>, 
     radlci: &mut HashMap<String, Vec<Radlc>>,
@@ -494,44 +494,7 @@ fn playBVS3(
     Ok(changes)
 }
 
-fn playBVI1(
-    round_players: &[User], 
-    score: &mut HashMap<String, Vec<Option<i32>>>, 
-    radlci: &mut HashMap<String, Vec<Radlc>>,
-    round_player_attributes: &mut HashMap<String, Vec<TarokPlayerInput>>, 
-    round_game_attributes: &mut Vec<TarokGameInput>
-) -> Result<HashMap<String, i32>, Error> {
-    // check if at least one player exists
-    if let Err(e) = players_validity_check(round_players) {
-        return Err(Error::new(ErrorKind::Other, format!("{}", e)));
-    }
-    // get points of the game
-    let mut game_points = calculate_base_game_points(&round_game_attributes);
-    
-    // add the attribute of "playing player" to the first player
-    if let Err(e) = add_playing_attribute_to_first_player(round_players, round_player_attributes) {
-        return Err(Error::new(ErrorKind::Other, format!("{}", e)));
-    }
-
-    // add attribute of "supporting player" to other players
-    if let Err(e) = add_supporting_attribute_to_players(round_players, round_player_attributes) {
-        return Err(Error::new(ErrorKind::Other, format!("{}", e)));
-    }
-
-    // check if player that is playing the round (should be first) has a radlc avalible
-    // if yes double game points
-    handle_radlc(round_players, radlci, &mut game_points);
-    
-    let changes = match score_game_and_player(round_players, score, &round_player_attributes, &game_points) {
-        Ok(hm) => hm,
-        Err(e) => return Err(Error::new(ErrorKind::Other, format!("Error caluclating score: {}", e))),
-    };
-    // add radlc to all players
-    add_radlc(radlci);
-    Ok(changes)
-}
-
-fn playBVI2(
+fn play_BVI1(
     round_players: &[User], 
     score: &mut HashMap<String, Vec<Option<i32>>>, 
     radlci: &mut HashMap<String, Vec<Radlc>>,
@@ -568,7 +531,7 @@ fn playBVI2(
     Ok(changes)
 }
 
-fn playBVI3(
+fn play_BVI2(
     round_players: &[User], 
     score: &mut HashMap<String, Vec<Option<i32>>>, 
     radlci: &mut HashMap<String, Vec<Radlc>>,
@@ -605,7 +568,44 @@ fn playBVI3(
     Ok(changes)
 }
 
-fn playP(
+fn play_BVI3(
+    round_players: &[User], 
+    score: &mut HashMap<String, Vec<Option<i32>>>, 
+    radlci: &mut HashMap<String, Vec<Radlc>>,
+    round_player_attributes: &mut HashMap<String, Vec<TarokPlayerInput>>, 
+    round_game_attributes: &mut Vec<TarokGameInput>
+) -> Result<HashMap<String, i32>, Error> {
+    // check if at least one player exists
+    if let Err(e) = players_validity_check(round_players) {
+        return Err(Error::new(ErrorKind::Other, format!("{}", e)));
+    }
+    // get points of the game
+    let mut game_points = calculate_base_game_points(&round_game_attributes);
+    
+    // add the attribute of "playing player" to the first player
+    if let Err(e) = add_playing_attribute_to_first_player(round_players, round_player_attributes) {
+        return Err(Error::new(ErrorKind::Other, format!("{}", e)));
+    }
+
+    // add attribute of "supporting player" to other players
+    if let Err(e) = add_supporting_attribute_to_players(round_players, round_player_attributes) {
+        return Err(Error::new(ErrorKind::Other, format!("{}", e)));
+    }
+
+    // check if player that is playing the round (should be first) has a radlc avalible
+    // if yes double game points
+    handle_radlc(round_players, radlci, &mut game_points);
+    
+    let changes = match score_game_and_player(round_players, score, &round_player_attributes, &game_points) {
+        Ok(hm) => hm,
+        Err(e) => return Err(Error::new(ErrorKind::Other, format!("Error caluclating score: {}", e))),
+    };
+    // add radlc to all players
+    add_radlc(radlci);
+    Ok(changes)
+}
+
+fn play_P(
     round_players: &[User], 
     score: &mut HashMap<String, Vec<Option<i32>>>, 
     radlci: &mut HashMap<String, Vec<Radlc>>,
@@ -637,7 +637,7 @@ fn playP(
     Ok(changes)
 }
 
-fn playB(
+fn play_B(
     round_players: &[User], 
     score: &mut HashMap<String, Vec<Option<i32>>>, 
     radlci: &mut HashMap<String, Vec<Radlc>>,
@@ -669,7 +669,7 @@ fn playB(
     Ok(changes)
 }
 
-fn playKL(
+fn play_KL(
     round_players: &[User], 
     score: &mut HashMap<String, Vec<Option<i32>>>, 
     radlci: &mut HashMap<String, Vec<Radlc>>,
@@ -694,7 +694,7 @@ fn playKL(
     Ok(changes)
 }
 
-fn playSB(
+fn play_SB(
     round_players: &[User], 
     score: &mut HashMap<String, Vec<Option<i32>>>, 
     radlci: &mut HashMap<String, Vec<Radlc>>,
@@ -726,7 +726,7 @@ fn playSB(
     Ok(changes)
 }
 
-fn playS1(
+fn play_S1(
     round_players: &[User], 
     score: &mut HashMap<String, Vec<Option<i32>>>, 
     radlci: &mut HashMap<String, Vec<Radlc>>,
@@ -755,7 +755,7 @@ fn playS1(
     Ok(changes)
 }
 
-fn playS2(
+fn play_S2(
     round_players: &[User], 
     score: &mut HashMap<String, Vec<Option<i32>>>, 
     radlci: &mut HashMap<String, Vec<Radlc>>,
@@ -784,7 +784,7 @@ fn playS2(
     Ok(changes)
 }
 
-fn playS3(
+fn play_S3(
     round_players: &[User], 
     score: &mut HashMap<String, Vec<Option<i32>>>, 
     radlci: &mut HashMap<String, Vec<Radlc>>,
@@ -813,42 +813,7 @@ fn playS3(
     Ok(changes)
 }
 
-fn playI1(
-    round_players: &[User], 
-    score: &mut HashMap<String, Vec<Option<i32>>>, 
-    radlci: &mut HashMap<String, Vec<Radlc>>,
-    round_player_attributes: &mut HashMap<String, Vec<TarokPlayerInput>>, 
-    round_game_attributes: &mut Vec<TarokGameInput>
-) -> Result<HashMap<String, i32>, Error> {
-    // check if at least one player exists
-    if let Err(e) = players_validity_check(round_players) {
-        return Err(Error::new(ErrorKind::Other, format!("{}", e)));
-    }
-    // get points of the game
-    let mut game_points = calculate_base_game_points(&round_game_attributes);
-    
-    // add the attribute of "playing player" to the first player
-    if let Err(e) = add_playing_attribute_to_first_player(round_players, round_player_attributes) {
-        return Err(Error::new(ErrorKind::Other, format!("{}", e)));
-    }
-
-    // add attribute of "supporting player" to other players
-    if let Err(e) = add_supporting_attribute_to_players(round_players, round_player_attributes) {
-        return Err(Error::new(ErrorKind::Other, format!("{}", e)));
-    }
-
-    // check if player that is playing the round (should be first) has a radlc avalible
-    // if yes double game points
-    handle_radlc(round_players, radlci, &mut game_points);
-    
-    let changes = match score_game_and_player(round_players, score, &round_player_attributes, &game_points) {
-        Ok(hm) => hm,
-        Err(e) => return Err(Error::new(ErrorKind::Other, format!("Error caluclating score: {}", e))),
-    };
-    Ok(changes)
-}
-
-fn playI2(
+fn play_I1(
     round_players: &[User], 
     score: &mut HashMap<String, Vec<Option<i32>>>, 
     radlci: &mut HashMap<String, Vec<Radlc>>,
@@ -883,8 +848,43 @@ fn playI2(
     Ok(changes)
 }
 
+fn play_I2(
+    round_players: &[User], 
+    score: &mut HashMap<String, Vec<Option<i32>>>, 
+    radlci: &mut HashMap<String, Vec<Radlc>>,
+    round_player_attributes: &mut HashMap<String, Vec<TarokPlayerInput>>, 
+    round_game_attributes: &mut Vec<TarokGameInput>
+) -> Result<HashMap<String, i32>, Error> {
+    // check if at least one player exists
+    if let Err(e) = players_validity_check(round_players) {
+        return Err(Error::new(ErrorKind::Other, format!("{}", e)));
+    }
+    // get points of the game
+    let mut game_points = calculate_base_game_points(&round_game_attributes);
+    
+    // add the attribute of "playing player" to the first player
+    if let Err(e) = add_playing_attribute_to_first_player(round_players, round_player_attributes) {
+        return Err(Error::new(ErrorKind::Other, format!("{}", e)));
+    }
 
-fn playI3(
+    // add attribute of "supporting player" to other players
+    if let Err(e) = add_supporting_attribute_to_players(round_players, round_player_attributes) {
+        return Err(Error::new(ErrorKind::Other, format!("{}", e)));
+    }
+
+    // check if player that is playing the round (should be first) has a radlc avalible
+    // if yes double game points
+    handle_radlc(round_players, radlci, &mut game_points);
+    
+    let changes = match score_game_and_player(round_players, score, &round_player_attributes, &game_points) {
+        Ok(hm) => hm,
+        Err(e) => return Err(Error::new(ErrorKind::Other, format!("Error caluclating score: {}", e))),
+    };
+    Ok(changes)
+}
+
+
+fn play_I3(
     round_players: &[User], 
     score: &mut HashMap<String, Vec<Option<i32>>>, 
     radlci: &mut HashMap<String, Vec<Radlc>>,
@@ -943,25 +943,6 @@ fn score_game_and_player(
             Some(sc) => {
                 score_change.insert(player.name.clone(), game_points + personal_points);
                 sc.push(Some(game_points + personal_points))
-            },
-            None => return Err(Error::new(ErrorKind::Other, format!("Player does not have a score vector!"))),
-        };
-    }
-    Ok(score_change)
-}
-
-fn score_game_only(
-    players: &[User],
-    score: &mut HashMap<String, Vec<Option<i32>>>,
-    game_points: &i32
-) -> Result<HashMap<String, i32>, Error>{
-    let mut score_change = HashMap::new();
-    for player in players.iter() {
-        // save player score to the game score sheet
-        match score.get_mut(&player.id) {
-            Some(sc) => {
-                score_change.insert(player.name.clone(), *game_points);
-                sc.push(Some(*game_points))
             },
             None => return Err(Error::new(ErrorKind::Other, format!("Player does not have a score vector!"))),
         };
